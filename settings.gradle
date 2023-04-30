@@ -1,0 +1,28 @@
+import java.nio.file.Files
+
+pluginManagement {
+    repositories {
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://files.minecraftforge.net/maven/" }
+        gradlePluginPortal()
+    }
+}
+
+
+loadFolder(file("projects").toPath())
+
+def loadFolder(java.nio.file.Path folder) {
+    Files.list(folder)
+            .filter(path -> !Files.isDirectory(path) ? false : Files.isRegularFile(path.resolve("build.gradle")))
+            .forEach(path -> {
+                println("Loading Project: " + path.getFileName())
+                include path.toFile().getName()
+                ProjectDescriptor project = project(":" + path.toFile().getName());
+                project.projectDir = path.toFile()
+                if(Files.exists(path.resolve("Projects"))) {
+                    println("Loading SubProjects... for " + project.name)
+                    loadFolder(path.resolve("Projects"))
+                }
+            })
+}
